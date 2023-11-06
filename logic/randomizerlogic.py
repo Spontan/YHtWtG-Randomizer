@@ -70,7 +70,7 @@ def selectSpawnState(options):
     spawnLocation = selectSpawnLocation(options.shuffleSpawn)
     return (spawnLocation, startRequirements)
 
-def selectSpawnLocation(shuffleSpawn, nrLocs=71, excludeLocs=None):
+def selectSpawnLocation(shuffleSpawn, nrLocs=71, excludeLocs=[43]):
     """
     Selects a valid spawn location
     TODO: add spawn shuffle functionality
@@ -118,6 +118,9 @@ def generateRandomSeed(options):
     random.seed(options.seed)
 
     connectionTable, labels = calc.readTable("logic/reduced_map.csv")
+    if options.requireAllOrbs:
+        for row in connectionTable:
+            row[DEFAULT_END] = [15]
 
     while True:
         spawnState = selectSpawnState(options)
@@ -127,8 +130,8 @@ def generateRandomSeed(options):
         solution = findSolution(connectionTable, spawnState, orbLocations, endLocation)
 
         if solution:
-            #print(f'spots: {orbLocations}, spawn: {spawnState}')
-            #print(f'spotsNames: {[labels[i] for i in orbLocations]}, spawn: {(labels[spawnState[0]],spawnState[1])}')
+            print(f'spots: {orbLocations}, spawn: {spawnState}')
+            print(f'spotsNames: {[labels[i] for i in orbLocations]}, spawn: {(labels[spawnState[0]],spawnState[1])}')
             break
 
     return spawnState, orbLocations
@@ -222,7 +225,7 @@ def findSolution(table, spawn, orbs, end):
     visitedLocations = []
     solution = None
     while not isLocationInList(currentLocations, end) and len(currentLocations) > 0:
-        # print(currentLocations)
+        print(currentLocations)
         loc = currentLocations.pop()
         visitedLocations += [loc]
 
