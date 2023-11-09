@@ -33,7 +33,11 @@ class DifficultyOptions(object):
     def __str__(self):
         return (f'Spike Jumps: {self.spikeJumps}\n'
                 f'Triple Jumps: {self.tripleJumps}\n'
-                f'Extended Jumps: {self.extendedJumps}')
+                f'Extended Jumps: {self.extendedJumps}\n'
+                f'Blue Orb: {self.startWithBlueOrb}\n'
+                f'Red Orb: {self.startWithRedOrb}\n'
+                f'Boots: {self.startWithBoots}\n'
+                f'Gloves: {self.startWithGloves}\n')
 
     def toRequirementValue(self):
         return 1 * self.startWithBlueOrb + \
@@ -55,14 +59,14 @@ class DifficultyOptions(object):
 
 
 class RandomizerOptions(object):
-    shuffleSpawn = False                    #TODO: Not supported yet
-    requireAllOrbs = False                  #TODO: Not supported yet
+    shuffleSpawn = False
+    requireAllOrbs = False
     tpMode = TpShuffleMode.NORMAL           #TODO: Not supported yet
     tpAmount = TPShuffleAmount.REGULAR      #TODO: Not supported yet
     hideTps = False                         #TODO: Not supported yet
     hidePowerups = False                    #TODO: Not supported yet
     seed = None
-    difficultyOptions = DifficultyOptions() #TODO: Not supported yet
+    difficultyOptions = DifficultyOptions()
 
 
 def selectSpawnState(options):
@@ -85,18 +89,27 @@ def selectSpawnLocation(shuffleSpawn, nrLocs=71, excludeLocs=[43]):
         return DEFAULT_SPAWN
 
 
-def selectOrbLocations(nrLocs=71, excludeLocs=[27, 43]):
+def selectOrbLocations(nrLocs=71, excludeLocs=[27, 43], difficultyOptions = DifficultyOptions()):
     """
     Selects a random set of unique locations for the orbs.
     :param nrLocs:
     :param excludeLocs: Locations which should be excluded as orb locations (e.g. spawn and end)
+    :param difficultyOptions: Can be used to leave out orbs so they can be given to the player at the spawn location
     :return:
     """
-    orbs = []
-    while len(orbs) < 4:
-        nextOrb = selectRandomLocation(nrLocs, excludeLocs)
-        orbs += [nextOrb]
-        excludeLocs += [nextOrb]
+    orbs = [-1,-1,-1,-1]
+    if not difficultyOptions.startWithBlueOrb:
+        orbs[0] = selectRandomLocation(nrLocs, excludeLocs)
+        excludeLocs += [orbs[0]]
+    if not difficultyOptions.startWithRedOrb:
+        orbs[1] = selectRandomLocation(nrLocs, excludeLocs)
+        excludeLocs += [orbs[1]]
+    if not difficultyOptions.startWithBoots:
+        orbs[2] = selectRandomLocation(nrLocs, excludeLocs)
+        excludeLocs += [orbs[2]]
+    if not difficultyOptions.startWithGloves:
+        orbs[3] = selectRandomLocation(nrLocs, excludeLocs)
+        excludeLocs += [orbs[3]]
 
     return orbs
 
@@ -125,7 +138,7 @@ def generateRandomSeed(options):
     while True:
         spawnState = selectSpawnState(options)
         endLocation = selectEndLocation()
-        orbLocations = selectOrbLocations(excludeLocs=[spawnState[0], endLocation])
+        orbLocations = selectOrbLocations(excludeLocs=[spawnState[0], endLocation], difficultyOptions=options.difficultyOptions)
 
         solution = findSolution(connectionTable, spawnState, orbLocations, endLocation)
 

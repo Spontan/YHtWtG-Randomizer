@@ -10,6 +10,8 @@ from logic import randomizerlogic as logic
 
 # Runs the randomizer code based on the given seed.
 #     This should run when the "Randomize" button is pressed
+
+
 def run_randomizer():
     # First, get the seed
     seed = eseed.get()
@@ -92,7 +94,23 @@ def run_randomizer():
                     newline += 'lose'
                 newline += '" x="' + str((Treasure[t])[3]) + '" y="' + str((Treasure[t])[4] - 4) + '" />\n'
                 writefile.write(newline)
-            elif not t == spawnState[0]:
+            elif t == spawnState[0]:
+                for whichorb in range(len(spots)):
+                    if spots[whichorb] == -1:
+                        newline = '<entity template="orb_'
+                        if (whichorb == 0):
+                            newline += 'blue'
+                        elif (whichorb == 1):
+                            newline += 'red'
+                        elif (whichorb == 2):
+                            newline += 'boots'
+                        elif (whichorb == 3):
+                            newline += 'gloves'
+                        else:
+                            newline += 'lose'
+                        newline += '" x="' + str((Treasure[t])[3]) + '" y="' + str((Treasure[t])[4] - 4) + '" />\n'
+                        writefile.write(newline)
+            else:
                 newline = f'<entity template="{treasureEntity}" x="' + str((Treasure[t])[3]) + '" y="' + str(
                     (Treasure[t])[4]) + '" />\n'
                 writefile.write(newline)
@@ -114,7 +132,23 @@ def run_randomizer():
                         newline += 'lose'
                     newline += '" x="' + str((Treasure[t])[3]) + '" y="' + str((Treasure[t])[4] - 4) + '" />\n'
                     writefile.write(newline)
-                elif not t == spawnState[0]:
+                elif t == spawnState[0]:
+                    for whichorb in range(len(spots)):
+                        if spots[whichorb] == -1:
+                            newline = '<entity template="orb_'
+                            if (whichorb == 0):
+                                newline += 'blue'
+                            elif (whichorb == 1):
+                                newline += 'red'
+                            elif (whichorb == 2):
+                                newline += 'boots'
+                            elif (whichorb == 3):
+                                newline += 'gloves'
+                            else:
+                                newline += 'lose'
+                            newline += '" x="' + str((Treasure[t])[3]) + '" y="' + str((Treasure[t])[4] - 4) + '" />\n'
+                            writefile.write(newline)
+                else:
                     newline = f'<entity template="{treasureEntity}" x="' + str((Treasure[t])[3]) + '" y="' + str(
                         (Treasure[t])[4]) + '" />\n'
                     writefile.write(newline)
@@ -204,6 +238,7 @@ class CustomDifficultyWindow(Toplevel):
 
     def __init__(self, parent, initialSettings=logic.DifficultyOptions(), onclose=None):
         super().__init__(parent)
+        self.geometry(f'+{parent.winfo_x()+10}+{parent.winfo_y()+10}')
         self.title('Custom Difficulty')
 
         self.onclose = onclose
@@ -216,10 +251,19 @@ class CustomDifficultyWindow(Toplevel):
         self.tripleJumpVar.set(self.settings.tripleJumps)
         self.extendedJumpVar = BooleanVar()
         self.extendedJumpVar.set(self.settings.extendedJumps)
+        self.startWithBlueOrb = BooleanVar()
+        self.startWithBlueOrb.set(self.settings.startWithBlueOrb)
+        self.startWithRedOrb = BooleanVar()
+        self.startWithRedOrb.set(self.settings.startWithRedOrb)
+        self.startWithBoots = BooleanVar()
+        self.startWithBoots.set(self.settings.startWithBoots)
+        self.startWithGloves = BooleanVar()
+        self.startWithGloves.set(self.settings.startWithGloves)
+
 
         difficultyFrame = Frame(self)
         difficultyFrame.grid(row=0, column=0, sticky=(N, E, S, W), padx=5, pady=5)
-        checkSpikeJumps = Checkbutton(difficultyFrame, text='Spikejumps', variable=self.spikeJumpVar,
+        checkSpikeJumps = Checkbutton(difficultyFrame, text='Spike Jumps', variable=self.spikeJumpVar,
                                       command=self.updateDifficultySettings)
         checkSpikeJumps.grid(row=0, column=0, sticky=W)
         checkTripleJumps = Checkbutton(difficultyFrame, text='Ground Grace Storage (aka Triple Jumps)',
@@ -228,10 +272,22 @@ class CustomDifficultyWindow(Toplevel):
         checkExtendedJumps = Checkbutton(difficultyFrame, text='Refire Grace Storage (aka Extended Jumps)',
                                          variable=self.extendedJumpVar, command=self.updateDifficultySettings)
         checkExtendedJumps.grid(row=2, column=0, sticky=W)
+        checkSpikeJumps = Checkbutton(difficultyFrame, text='Start with Cerulean Aura', variable=self.startWithBlueOrb,
+                                      command=self.updateDifficultySettings)
+        checkSpikeJumps.grid(row=3, column=0, sticky=W)
+        checkSpikeJumps = Checkbutton(difficultyFrame, text='Start with Crimson Aura', variable=self.startWithRedOrb,
+                                      command=self.updateDifficultySettings)
+        checkSpikeJumps.grid(row=4, column=0, sticky=W)
+        checkSpikeJumps = Checkbutton(difficultyFrame, text='Start with Springheel Boots', variable=self.startWithBoots,
+                                      command=self.updateDifficultySettings)
+        checkSpikeJumps.grid(row=5, column=0, sticky=W)
+        checkSpikeJumps = Checkbutton(difficultyFrame, text='Start with Spider Gloves', variable=self.startWithGloves,
+                                      command=self.updateDifficultySettings)
+        checkSpikeJumps.grid(row=6, column=0, sticky=W)
 
         closeButton = tkinter.Button(difficultyFrame, text='Close', command=self.close, )
         self.protocol("WM_DELETE_WINDOW", self.close)
-        closeButton.grid(row=3, column=0, sticky=(W, E, S))
+        closeButton.grid(row=7, column=0, sticky=(W, E, S))
 
         self.transient(parent)
         self.wait_visibility()
@@ -239,14 +295,14 @@ class CustomDifficultyWindow(Toplevel):
         self.grab_set()
 
     def updateDifficultySettings(self):
-        self.settings.startWithBlueOrb = False
-        self.settings.startWithRedOrb = False
-        self.settings.startWithBoots = False
-        self.settings.startWithGloves = False
-
         self.settings.spikeJumps = self.spikeJumpVar.get()
         self.settings.tripleJumps = self.tripleJumpVar.get()
         self.settings.extendedJumps = self.extendedJumpVar.get()
+
+        self.settings.startWithBlueOrb = self.startWithBlueOrb.get()
+        self.settings.startWithRedOrb = self.startWithRedOrb.get()
+        self.settings.startWithBoots = self.startWithBoots.get()
+        self.settings.startWithGloves = self.startWithGloves.get()
 
     def close(self):
         if self.onclose != None:
