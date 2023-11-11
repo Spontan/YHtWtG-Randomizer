@@ -56,7 +56,7 @@ def run_randomizer():
         spawnState = (spawnState[0] - 1, spawnState[1])
     spawnLocation = Treasure[spawnState[0]]
 
-    print(f'spots: {spots}, spawn: {spawnState}')
+    #print(f'spots: {spots}, spawn: {spawnState}')
     writefilename = 'Rooms_random_' + seed + '.xml'
     readfile = open('Rooms_randomBase.xml')
     writefile = open(writefilename, 'w')

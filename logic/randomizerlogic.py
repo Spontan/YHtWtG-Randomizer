@@ -143,8 +143,8 @@ def generateRandomSeed(options):
         solution = findSolution(connectionTable, spawnState, orbLocations, endLocation)
 
         if solution:
-            print(f'spots: {orbLocations}, spawn: {spawnState}')
-            print(f'spotsNames: {[labels[i] for i in orbLocations]}, spawn: {(labels[spawnState[0]],spawnState[1])}')
+            #print(f'spots: {orbLocations}, spawn: {spawnState}')
+            #print(f'spotsNames: {[labels[i] for i in orbLocations]}, spawn: {(labels[spawnState[0]],spawnState[1])}')
             break
 
     return spawnState, orbLocations
@@ -238,7 +238,7 @@ def findSolution(table, spawn, orbs, end):
     visitedLocations = []
     solution = None
     while not isLocationInList(currentLocations, end) and len(currentLocations) > 0:
-        print(currentLocations)
+        #print(currentLocations)
         loc = currentLocations.pop()
         visitedLocations += [loc]
 
