@@ -10,15 +10,15 @@ If you find any seeds that don't work, please use this github to report it as an
 #### 1.3:
  - **Graphical User Interface for ease of use**
  - **Complete rework of the randomizer logic**.
-Now uses a graph containing all locations on the map to look for a path from the spawn to the end. This will make
-including other randomization options a lot easier.
- - This version assumes the use of glitches and may contain softlocks if you don't go right before dropping 
-down in the beginning (both will be changed later)
- - All treasure except the ones in _Consolation Prize_ are available (68/70)
+Now uses a path-finding algorithm to check for valid configurations.
+ - This version may contain softlocks - mainly by going to the blue orb area first and not finding any powerups there.
+ - All treasure is now available for randomization
  - Added option to require all orbs to win
  - Added option to replace all other treasure with lose orbs
+ - Added option to randomize the spawn location
  - Settings Seed to share your settings with others (will be more helpful as more options are added)
- - Seed can now be any alpha-numeric string, not just numbers
+ - Seed can now be any alpha-numeric string, not just numbers.
+ - Map includes additional paths for more routing options.
 
 #### 1.2:
  -  Orbs are now randomized with most treasures (66/70 locations)
@@ -48,18 +48,19 @@ with Rooms_random_{your_seed}.xml and random_{your_seed}.gam (for every generate
 
 ## To Run:
  1. Execute RandomizeYHTWTG.py to bring up the user interface.
- 2. Check the options you want and enter the seed in the "Randomizer Seed" box.
- 3. Click the "Randomize" button to create the randomized file.
+ 2. Check the options you want and enter the seed in the "Randomizer Seed" (leave empty for random seed).
+ 3. Click the "Randomize" button to create the randomized map.
  4. The new map will appear in your map list in-game.
 
-## Options Explaination:
+## Options Explanation:
  -  Require All Orbs: All 4 orbs are required to reach the Win orb.
  -  Replace Treasure with Lose: Instead of money bags, all regular treasure is replaced with lose orbs.
+ -  Shuffle Spawn Location: Spawns you at a random treasure location (regular spawn becomes a treasure).
+ -  Difficulty: Lets you select between Unrestricted (all glitches), Glitchless and Custom (customized gltich settings + start with powerups).
 
 ## The Future:
- - [ ] logic options for allowing/excluding glitches
- - [ ] start randomization
- - [ ] more treasure locations
+ - [ ] more glitch options
+ - [ ] new treasure locations
  - [ ] teleporter randomization
  - [ ] magic word randomization
  - [ ] bell and enemy randomization (maybe)

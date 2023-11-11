@@ -173,10 +173,10 @@ def run_randomizer():
     writefile = open(gamfilename, 'w')
     gam_text = 'Title: Rand-' + seed + '\n'
     gam_text += 'FullTitle: Randomizer seed ' + seed + '\n'
-    gam_text += 'DevTeam: ZZKylie & the WtG Discord\n'
+    gam_text += 'DevTeam: https://discord.com/invite/bZs99rY\n'
     gam_text += 'DevLogo: phearts.bmp\n'
-    gam_text += "Author: ZZKylie / ZZKer" + '\n'
-    gam_text += "URL: ZZKer#1962" + '\n'
+    gam_text += "Author: RNG" + '\n'
+    gam_text += "URL: https://github.com/Spontan/YHtWtG-Randomizer" + '\n'
     gam_text += 'Description: Orb Randomizer version 1.3\n'
     gam_text += 'MajorVersion: 1\n'
     gam_text += 'MinorVersion: 3\n'
