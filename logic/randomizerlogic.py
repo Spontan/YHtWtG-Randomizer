@@ -8,7 +8,7 @@ DEFAULT_BLUE_ORB = 3
 DEFAULT_RED_ORB = 63
 DEFAULT_BOOTS = 31
 DEFAULT_GLOVES = 69
-EXCLUDED_SPAWN_LOCATIONS = [9, 14, 19, 21, 23, 28, 41, 47, 58, 65, 66]
+EXCLUDED_SPAWN_LOCATIONS = [9, 14, 19, 21, 23, 28, 42, 47, 57, 65, 66]
 
 class TpShuffleMode(Enum):
     NORMAL = 0
@@ -84,7 +84,7 @@ def selectSpawnLocation(shuffleSpawn, nrLocs=71, excludeLocs=[43]):
     if excludeLocs is None:
         excludeLocs = []
     if shuffleSpawn:
-        return selectRandomLocation(nrLocs, excludeLocs)
+        return selectRandomLocation(nrLocs, excludeLocs + EXCLUDED_SPAWN_LOCATIONS)
     else:
         return DEFAULT_SPAWN
 
