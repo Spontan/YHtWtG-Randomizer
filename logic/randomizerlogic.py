@@ -97,7 +97,7 @@ def selectOrbLocations(nrLocs=71, excludeLocs=[27, 43], difficultyOptions = Diff
     :param difficultyOptions: Can be used to leave out orbs so they can be given to the player at the spawn location
     :return:
     """
-    orbs = [-1,-1,-1,-1]
+    orbs = [-1, -1, -1, -1]
     if not difficultyOptions.startWithBlueOrb:
         orbs[0] = selectRandomLocation(nrLocs, excludeLocs)
         excludeLocs += [orbs[0]]
@@ -197,7 +197,7 @@ def fulfillsRequirements(reqList, fulfilledReqs):
 
 def updateStates(locList, orbLocs, excludeLocs):
     """
-    For a given list of location states adds the requirement for a powerup if the location is and orb location
+    For a given list of location states adds the requirement for a powerup if the location is an orb location
     and removes location in the excluded list
     :param locList: The list of location states
     :param orbLocs: The list of orb locations
