@@ -6,6 +6,9 @@ DEFAULT_GLOVES = "Spider Gloves Pickup"
 DEFAULT_LOSE = "Consolation Prize Pickup-1"
 DEFAULT_WIN = "Eponymous Pickup"
 REQUIREMENTS_COUNT = 7
+REQUIREMENTS_SIZE = 1 << (REQUIREMENTS_COUNT)
+REQUIREMENT_POWERSET_SIZE = 1 << REQUIREMENTS_COUNT * (REQUIREMENTS_COUNT-1) #Number of possible requirement sets
+SQUARED_REQUIREMENT_POWERSET_SIZE = REQUIREMENT_POWERSET_SIZE ** 2  #Number of possible combinations of requirement sets
 calculateTotalRequirementsDict = {}
 reduceReqsDict = {}
 
@@ -156,17 +159,18 @@ def findPoIs(locations):
 
     return pois
 
-def reduceRequirementTable(table, labels, reducedLocations = None, pathsMatrix = None, printProgress = True):
+def reduceRequirementTable(matrix, labels, reducedLocations = None, pathsMatrix = None, printProgress = True):
     """
     Calculates requirements to reach any location on the map from any other location and returns the entries for
     the given set of locations. Can be used to precalculate the connections between all pickup locations + other
     relevant locations (spawn, end, teleporter, etc.)
-    :param table: Location graph matrix
+    :param matrix: Location graph matrix
     :param labels: Full list of Location names
     :param reducedLocations: List of relevant locations
     :param pathsMatrix: Debug option, providing an empty matrix enables debug mode. After returning, the matrix contains
                 all paths the algorithm found.
     """
+    nonEmptyMatrixEntries = calculateNonEmptyMatrixEntries(matrix)
     if reducedLocations == None:
         reducedLocations = []
         for label in labels:
@@ -182,7 +186,7 @@ def reduceRequirementTable(table, labels, reducedLocations = None, pathsMatrix =
     for i in range(len(reducedLocations)):
         startLocation = reducedLocations[i]
         initialState, paths = getInitialState(labels, startLocation, debugMode)
-        finalState = findFinalState(table, initialState, paths)
+        finalState = findFinalState(matrix, initialState, nonEmptyMatrixEntries, paths)
         reducedTable[i] = [finalState[x] for x in reducedIndex]
         if printProgress:
             print(f'({i+1}/{len(reducedLocations)})')
@@ -191,25 +195,36 @@ def reduceRequirementTable(table, labels, reducedLocations = None, pathsMatrix =
 
     return reducedTable, reducedLocations
 
-def findFinalState(matrix, initialState, paths = None):
+
+def findFinalState(matrix, initialState, nonEmptyMatrixEntries, paths = None):
     """
     Calculates requirements to reach all locations on the map from an initial state. Repeatedly takes one step along
     all edges of the requirement graph until nothing changes anymore.
     :param matrix: The location graph matrix
     :param initialState: Usually should just have the start location set to [0] and the rest to []
     :param paths: Debug option to retrieve the actual paths found to each location
+    :param nonEmptyMatrixEntries: Allows providing indices for non-empty entries in each column of the provided matrix.
+    example: Matrix [[1, 0, 5],[4, 0, 0],[0, 1, 2]], Index [[0,1],[2],[0,2]]
     :return: The complete list of requirements for all locations
     """
     oldState = initialState
-    currentState = iterate(matrix, oldState, paths)
+    currentState, nonTerminalLocs = iterate(matrix, oldState, nonEmptyMatrixEntries, None, paths)
 
-    while getTableLine(oldState) != getTableLine(currentState):
+    while oldState != currentState:
         oldState = currentState
-        currentState = iterate(matrix, oldState, paths)
+        currentState, nonTerminalLocs = iterate(matrix, oldState, nonEmptyMatrixEntries, nonTerminalLocs, paths)
 
     return currentState
 
-def iterate(matrix, stateVector, paths = None):
+def calculateNonEmptyMatrixEntries(matrix):
+    nonEmptyMatrixEntries = [[] for _ in range(len(matrix))]
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            if matrix[j][i]:
+                nonEmptyMatrixEntries[i] += [j]
+    return nonEmptyMatrixEntries
+
+def iterate(matrix, stateVector, nonEmptyMatrixEntries, nonTerminalLocs, paths = None):
     """
     Does one iteration of the requirement calculation for all location. Calculating the requirements to reach all
     locations on the map from a given spawn point can be done by using a stateVector with all locations set to [] or [-1] (impossible)
@@ -224,24 +239,64 @@ def iterate(matrix, stateVector, paths = None):
     :return: The updated state vector after moving along the edges of the graph. Feed this back into this method as
     the new state vector to make multiple movements.
     """
-    ret = [[] for _ in range(len(stateVector))]
-    debugMode = (paths is not None and len(paths) == len(stateVector))
+    if (paths is not None and len(paths) == len(stateVector)):
+        return __doIterateDebug(matrix, stateVector, nonEmptyMatrixEntries, paths)
+    else:
+        return __doIterate(matrix, stateVector, nonEmptyMatrixEntries, nonTerminalLocs)
 
-    for i in range(len(matrix)):
+def __doIterate(matrix, stateVector, nonEmptyMatrixEntries, nonTerminalLocs):
+    ret = [[0] for _ in range(len(stateVector))]
+    if nonTerminalLocs == None:
+        nonTerminalLocs = range(len(matrix))
+
+    newNonTerminalLocs = []
+
+    for i in nonTerminalLocs:
         newPaths = []
-        for j in range(len(matrix)):
+        ret[i] = []
+        for j in nonEmptyMatrixEntries[i]:
+            if stateVector[j] == []:
+                newReqs = []
+            elif matrix[j][i] == [0]:
+                newReqs = stateVector[j]
+            else:
+                index = getIndexForRequirementOperationDicts(matrix[j][i], stateVector[j])
+                if index in calculateTotalRequirementsDict:
+                    newReqs = calculateTotalRequirementsDict[index]
+                else:
+                    newReqs = calculateTotalRequirements(matrix[j][i], stateVector[j])
+                    newReqs = reduceReqs(newReqs)[0]
+                    calculateTotalRequirementsDict[index] = newReqs
+            ret[i] += newReqs
+        ret[i] = reduceReqs(ret[i])[0]
+
+        if ret[i] != [0]:
+            newNonTerminalLocs += [i]
+
+    return ret, newNonTerminalLocs
+
+def __doIterateDebug(matrix, stateVector, nonEmptyMatrixEntries, nonTerminalLocs, paths):
+    ret = [[] for _ in range(len(stateVector))]
+    if nonTerminalLocs == None:
+        nonTerminalLocs = range(len(matrix))
+
+    newNonTerminalLocs = []
+
+    for i in nonTerminalLocs:
+        newPaths = []
+        for j in nonEmptyMatrixEntries[i]:
             #print(f'{matrix[j][i]}, {stateVector[i]}')
             newReqs = calculateTotalRequirements(matrix[j][i], stateVector[j])
             ret[i] += newReqs
-            if debugMode:
-                for req in newReqs:
-                    newPaths += [(req, j)]
+            for req in newReqs:
+                newPaths += [(req, j)]
         #print(ret[i])
         ret[i], newPaths = reduceReqs(ret[i], newPaths)
-        if debugMode:
-            reducePaths(paths[i], newPaths)
+        reducePaths(paths[i], newPaths)
+        if ret[i] != [0]:
+            newNonTerminalLocs += [i]
 
-    return ret
+    return ret, newNonTerminalLocs
 
 def calculateTotalRequirements(newLocationReqs, currentLocationReqs):
     """
@@ -255,8 +310,6 @@ def calculateTotalRequirements(newLocationReqs, currentLocationReqs):
     :param currentLocationReqs: Requirements for reaching the current location
     :return:
     """
-    if calculateTotalRequirementsDict[getIndexForRequirementOperationDicts(newLocationReqs, currentLocationReqs)] != None:
-        pass #ToDo
     nrNewReqs = len(newLocationReqs)
     nrOldReqs = len(currentLocationReqs)
     totalReqs = [0]*(nrNewReqs*nrOldReqs)
@@ -267,15 +320,21 @@ def calculateTotalRequirements(newLocationReqs, currentLocationReqs):
 
 def getIndexForRequirementOperationDicts(firstOperand, secondOperand = None):
     i = 0
+
     for v in firstOperand:
-        i *= 128
         i += v
+        i = i << REQUIREMENTS_COUNT
+    i = i >> REQUIREMENTS_COUNT
 
     if secondOperand != None:
-        i *= 128 ** (REQUIREMENTS_COUNT-1)
+        i = i << REQUIREMENTS_SIZE
+        i2 = 0
         for v in secondOperand:
-            i *= 128
-            i += v
+            i2 += v
+            i2 = i2 << REQUIREMENTS_COUNT
+        i2 = i2 >> REQUIREMENTS_COUNT
+
+        i += i2
 
     return i
 
