@@ -6,11 +6,19 @@ from tkinter import *
 from tkinter import ttk
 
 from logic import randomizerlogic as logic
+from logic.randomizerlogic import Teleporter as TP, Treasure
 
 
 # Runs the randomizer code based on the given seed.
 #     This should run when the "Randomize" button is pressed
 
+def isRoomLine(line):
+    return '<room x="' in line
+def getRoomCoords(roomsLine):
+    splits = roomsLine.split('="')
+    x = splits[1].split('"')[0]
+    y = splits[2].split('"')[0]
+    return int(x), int(y)
 
 def run_randomizer():
     # First, get the seed
@@ -20,7 +28,7 @@ def run_randomizer():
         seed = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     random.seed(seed)
 
-    Treasure = [(-10, 3, 'xxxx', 292, 36),  # 0
+    Treasures = [(-10, 3, 'xxxx', 292, 36),  # 0
                 (-9, 6, 'xXXX', 220, 84),  # 1
                 (-8, 1, 'xx11', 36, 180), (-8, 2, 'xxxx', 160, 124), (-8, 3, 'xXXx', 108, 44), (-8, 5, 'xxx1', 100, 148), (-8, 6, 'xXXX', 236, 124),  # 2-6
                 (-7, 1, 'xxxx', 252, 180), (-7, 2, 'xxxx', 236, 44), (-7, 2, 'xxxx', 20, 116), (-7, 4, 'xxXX', 212, 68),  # 7-10
@@ -39,13 +47,17 @@ def run_randomizer():
                 (6, 1, '1x1x', 212, 84),  # 63
                 (7, -1, '1x11', 92, 148), (7, 0, '1xXX', 148, 124), (7, 3, '1x11', 252, 100), (7, 3, '1x11', 68, 100),  # 64-67
                 (8, 1, '1xXX', 160, 124), (8, 2, '1x1x', 300, 180)]  # 68-69
-    loseorb = 42
+    loseorb = 42 # <entity template="gate" x="120" y="160" destwx="-9" destwy="4" destrx="304" destry="64" />
     options = logic.RandomizerOptions()
     options.difficultyOptions = diffChoiceDict[diffChoice.get()]
     options.shuffleSpawn = op_shuffleSpawn.get()
     options.requireAllOrbs = op_allorbs.get()
     options.seed = seed
-    spawnState, spots = logic.generateRandomSeed(options)
+    randomizedMap = logic.generateRandomSeed(options)
+
+    spawnState = randomizedMap.spawnState
+    spots = randomizedMap.orbLocations
+    teleporters = randomizedMap.teleporters
 
     for i in range(len(spots)):
         if spots[i] > 43:
@@ -54,14 +66,14 @@ def run_randomizer():
 
     if spawnState[0] > 43:
         spawnState = (spawnState[0] - 1, spawnState[1])
-    spawnLocation = Treasure[spawnState[0]]
+    spawnLocation = Treasures[spawnState[0]]
 
     #print(f'spots: {spots}, spawn: {spawnState}')
     writefilename = 'Rooms_random_' + seed + '.xml'
     readfile = open('Rooms_randomBase.xml')
     writefile = open(writefilename, 'w')
     t = 0
-    tcords = 'room x="' + str((Treasure[t])[0]) + '" y="' + str((Treasure[t])[1]) + '"'
+    tcords = (Treasures[t][0], Treasures[t][1])
     if op_lose.get():
         treasureEntity = 'orb_lose'
     else:
@@ -69,16 +81,17 @@ def run_randomizer():
     gateforallorbs = op_allorbs.get()
     for line in readfile:
         writefile.write(line)
-        if ('room x="-1" y="-2"' in line):
-            if (gateforallorbs):
-                newline = '<entity template="gate" x="296" y="144" destwx="1" destwy="-2" destrx="24" destry="152" />\n'
-            else:
-                newline = '<entity template="gate" x="296" y="144" destwx="0" destwy="-2" destrx="24" destry="152" />\n'
-            writefile.write(newline)
-        elif ('room x="0" y="-3"' in line):
-            newline = '<entity template="gate" x="296" y="144" destwx="-3" destwy="0" destrx="24" destry="144" />\n'
-            writefile.write(newline)
-        if (tcords in line):
+        if not isRoomLine(line):
+            continue
+
+        roomCoords = getRoomCoords(line)
+
+        for tp in teleporters:
+            if tp.room == roomCoords:
+                newline = (f'<entity template="gate" x="{tp.position[0]}" y="{tp.position[1]}" destwx="{tp.destinationRoom[0]}"'
+                           f' destwy="{tp.destinationRoom[1]}" destrx="{tp.destinationPosition[0]}" destry="{tp.destinationPosition[1]}" />\n')
+                writefile.write(newline)
+        if (tcords == roomCoords):
             if (t in spots):
                 whichorb = spots.index(t)
                 newline = '<entity template="orb_'
@@ -92,7 +105,7 @@ def run_randomizer():
                     newline += 'gloves'
                 else:
                     newline += 'lose'
-                newline += '" x="' + str((Treasure[t])[3]) + '" y="' + str((Treasure[t])[4] - 4) + '" />\n'
+                newline += '" x="' + str((Treasures[t])[3]) + '" y="' + str((Treasures[t])[4] - 4) + '" />\n'
                 writefile.write(newline)
             elif t == spawnState[0]:
                 for whichorb in range(len(spots)):
@@ -108,15 +121,15 @@ def run_randomizer():
                             newline += 'gloves'
                         else:
                             newline += 'lose'
-                        newline += '" x="' + str((Treasure[t])[3]) + '" y="' + str((Treasure[t])[4] - 4) + '" />\n'
+                        newline += '" x="' + str((Treasures[t])[3]) + '" y="' + str((Treasures[t])[4] - 4) + '" />\n'
                         writefile.write(newline)
             else:
-                newline = f'<entity template="{treasureEntity}" x="' + str((Treasure[t])[3]) + '" y="' + str(
-                    (Treasure[t])[4]) + '" />\n'
+                newline = f'<entity template="{treasureEntity}" x="' + str((Treasures[t])[3]) + '" y="' + str(
+                    (Treasures[t])[4]) + '" />\n'
                 writefile.write(newline)
             t += 1
-            if (t < len(Treasure) and (Treasure[t])[0] == (Treasure[t - 1])[0] and (Treasure[t])[1] ==
-                    (Treasure[t - 1])[1]):
+            if (t < len(Treasures) and (Treasures[t])[0] == (Treasures[t - 1])[0] and (Treasures[t])[1] ==
+                    (Treasures[t - 1])[1]):
                 if (t in spots):
                     whichorb = spots.index(t)
                     newline = '<entity template="orb_'
@@ -130,7 +143,7 @@ def run_randomizer():
                         newline += 'gloves'
                     else:
                         newline += 'lose'
-                    newline += '" x="' + str((Treasure[t])[3]) + '" y="' + str((Treasure[t])[4] - 4) + '" />\n'
+                    newline += '" x="' + str((Treasures[t])[3]) + '" y="' + str((Treasures[t])[4] - 4) + '" />\n'
                     writefile.write(newline)
                 elif t == spawnState[0]:
                     for whichorb in range(len(spots)):
@@ -146,15 +159,15 @@ def run_randomizer():
                                 newline += 'gloves'
                             else:
                                 newline += 'lose'
-                            newline += '" x="' + str((Treasure[t])[3]) + '" y="' + str((Treasure[t])[4] - 4) + '" />\n'
+                            newline += '" x="' + str((Treasures[t])[3]) + '" y="' + str((Treasures[t])[4] - 4) + '" />\n'
                             writefile.write(newline)
                 else:
-                    newline = f'<entity template="{treasureEntity}" x="' + str((Treasure[t])[3]) + '" y="' + str(
-                        (Treasure[t])[4]) + '" />\n'
+                    newline = f'<entity template="{treasureEntity}" x="' + str((Treasures[t])[3]) + '" y="' + str(
+                        (Treasures[t])[4]) + '" />\n'
                     writefile.write(newline)
                 t += 1
-            if (t < len(Treasure)):
-                tcords = 'room x="' + str((Treasure[t])[0]) + '" y="' + str((Treasure[t])[1]) + '"'
+            if (t < len(Treasures)):
+                tcords = (Treasures[t][0], Treasures[t][1])
     readfile.close()
     # op_allorbs code for rooms
     if (gateforallorbs):
@@ -390,6 +403,7 @@ output_label.grid(row=3, sticky=W)
 mainwindow.resizable(False, False)
 setSettingsString()
 mainwindow.mainloop()
+
 
 # Teleporters= [(-7,3,120,160,-9,4,304,64),#0
 #              (-6,4,192,32,-9,4,304,64),#1

@@ -2,7 +2,7 @@ import unittest
 from timeit import default_timer as timer
 from unittest.mock import patch
 import random
-from logic import randomizerlogic as logic, requirementcalculations as calc
+from logic import randomizerlogic as logic, requirementcalculations as calc, util
 
 
 class MyTestCase(unittest.TestCase):
@@ -10,7 +10,7 @@ class MyTestCase(unittest.TestCase):
     def test_mapFileReduction_loop(self):
         iterations = 10 ** 3 * 5
         map = "logic/test_loop.csv"
-        matrix, labels = calc.readTable(map)
+        matrix, labels = util.readTable(map)
         print("Testing with " + map)
         start = timer()
         for i in range(iterations):
@@ -22,7 +22,7 @@ class MyTestCase(unittest.TestCase):
     def test_mapFileReduction_towers(self):
         iterations = 10 ** 3 * 5
         map = "logic/test_towers.csv"
-        matrix, labels = calc.readTable(map)
+        matrix, labels = util.readTable(map)
         print("Testing with " + map)
         start = timer()
         for i in range(iterations):
@@ -36,7 +36,7 @@ class MyTestCase(unittest.TestCase):
         if iterations <= 0:
             return
         map = "logic/standard.csv"
-        matrix, labels = calc.readTable(map)
+        matrix, labels = util.readTable(map)
         print("Testing with " + map)
         start = timer()
         for i in range(iterations):

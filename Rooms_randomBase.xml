@@ -58,8 +58,6 @@
 </room>
 
 <room x="-7" y="3" title="I Wonder Where This Goes">
-	<entity template="gate" x="120" y="160"
-		destwx="-9" destwy="4" destrx="304" destry="64" />
 </room>
 
 <room x="-7" y="4" title="Aqueous Humor">
@@ -80,8 +78,6 @@
 </room>
 
 <room x="-6" y="4" title="Like Ivy, Twisting">
-	<entity template="gate" x="192" y="32"
-		destwx="-9" destwy="4" destrx="304" destry="64" />
 </room>
 
 <room x="-6" y="5" title="It's More Scared of You">
@@ -212,10 +208,6 @@
 </room>
 
 <room x="-3" y="4" title="Rawr!">
-	<entity template="gate" x="80" y="104"
-		destwx="-3" destwy="4" destrx="176" destry="104" />
-	<entity template="gate" x="160" y="104"
-		destwx="-3" destwy="4" destrx="64" destry="104" />
 </room>
 
 <room x="-3" y="5" toptitle="Springheel Boots" title="- Jump Again in Midair -">
@@ -230,8 +222,6 @@
 </room>
 
 <room x="-2" y="-2" title="Point of No Return">
-	<entity template="gate" x="24" y="160"
-		destwx="-1" destwy="-3" destrx="200" destry="104" />
 </room>
 
 <room x="-2" y="-1" title="Playing with Fire">
@@ -260,13 +250,9 @@
 </room>
 
 <room x="-2" y="5" title="Back to the Surface">
-	<entity template="gate" x="288" y="88"
-		destwx="0" destwy="2" destrx="160" destry="112" />
 </room>
 
 <room x="-1" y="-3" title="Speak Now..." listening="true" word="arc" tx="-1" ty="-2">
-	<entity template="gate" x="296" y="144"
-		destwx="0" destwy="-3" destrx="24" destry="152" />
 </room>
 
 <room x="-1" y="-2" title="Open Sesame">
@@ -335,7 +321,7 @@
 <room x="1" y="2" title="Cognitive Resonance">
 </room>
 
-<room x="1" y="3" title="Functional Spelæology" />
+<room x="1" y="3" title="Functional Spelï¿½ology" />
 
 <room x="1" y="4" title="Circular Logic">
 	<remap dx="-1" dy="0" x="1" y="4" />
@@ -348,8 +334,6 @@
 </room>
 
 <room x="2" y="1" title="Stick the Landing">
-	<entity template="gate" x="88" y="104"
-		destwx="6" destwy="4" destrx="24" destry="24" />
 </room>
 
 <room x="2" y="2" title="Precarious Footholds">
@@ -378,8 +362,6 @@
 </room>
 
 <room x="3" y="5" title="Abandoned Alcove">
-	<entity template="gate" x="40" y="72"
-		destwx="0" destwy="2" destrx="160" destry="112" />
 </room>
 
 <room x="3" y="6" title="yeah but why u jelly tho">
@@ -471,8 +453,6 @@
 </room>
 
 <room x="7" y="3" title="Secret Cat Level">
-	<entity template="gate" x="160" y="32"
-		destwx="0" destwy="2" destrx="160" destry="112" />
 </room>
 
 <room x="7" y="4" title="Feline Foreshadowing" />
@@ -486,6 +466,4 @@
 </room>
 
 <room x="8" y="2" title="Not Worth It!">
-	<entity template="gate" x="32" y="32"
-		destwx="6" destwy="1" destrx="16" destry="160" />
 </room>
