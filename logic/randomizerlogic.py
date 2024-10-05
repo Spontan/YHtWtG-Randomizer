@@ -43,6 +43,8 @@ class Teleporter(Entity):
         self.destinationRoom = destinationRoom
         self.destinationPosition = destinationPosition  # Default destination is at "Which Path Will I Take"
 
+DEFAULT_REGULAR_END_TP = Teleporter('J',(-1, -2), (296, 144), (0, -2), (24, 152))
+DEFAULT_ALLORBS_END_TP = Teleporter('J', (-1, -2), (296, 144), (1, -2), (24, 152))
 
 DEFAULT_TELEPORTERS = {'B': Teleporter('B', (-7, 3), (120, 160), (-9, 4), (304, 64)),
                        'F': Teleporter('F', (-6, 4), (192, 32), (-9, 4), (304, 64,)),
@@ -179,31 +181,32 @@ def selectEndLocation():
     return DEFAULT_END
 
 
-def setAllOrbsEndTp(teleporterEntities):
-    regularEndRoom = DEFAULT_TELEPORTERS['J'].destinationRoom
-    for e in teleporterEntities:
-        if e.destinationRoom == regularEndRoom:
-            e.destinationRoom = (1, -2)
-
 def getTpEntity(entryId, exitId):
     entry = DEFAULT_TELEPORTERS[entryId]
     exit = DEFAULT_TELEPORTERS[exitId]
 
     return Teleporter(entryId, entry.room, entry.position, exit.destinationRoom, exit.destinationPosition)
 
-def generateRandomSeed(options):
-    if not isinstance(options, RandomizerOptions):
-        print(f"options needs to be RandomizerOptions but was {type(options)}, using default options instead")
-        options = RandomizerOptions()
 
-    random.seed(options.seed)
-    matrix, labels = util.readTable("logic/standard.csv")
+def setEndTp(teleporterEntities, requireAllOrbs):
+    if requireAllOrbs:
+        oldEndRoom = DEFAULT_REGULAR_END_TP.destinationRoom
+        newEndRoom = DEFAULT_ALLORBS_END_TP.destinationRoom
+    else:
+        oldEndRoom = DEFAULT_ALLORBS_END_TP.destinationRoom
+        newEndRoom = DEFAULT_REGULAR_END_TP.destinationRoom
+    for e in teleporterEntities:
+        if e.destinationRoom == oldEndRoom:
+            e.destinationRoom = newEndRoom
+
+
+def shuffleTpExits(matrix, labels):
     tpEntries = []
     tpExits = []
     for i in range(len(labels)):
         if labels[i].startswith('"TP-Entry'):
-            id = labels[i].split(':',1)[0][10:]
-            tpEntries += [(id,i)]
+            id = labels[i].split(':', 1)[0][10:]
+            tpEntries += [(id, i)]
         if labels[i].startswith('"TP-Exit'):
             id = labels[i].split(':', 1)[0][9:]
             tpExits += [(id, i)]
@@ -221,16 +224,36 @@ def generateRandomSeed(options):
         j = random.randint(0, len(tpExitsCopy) - 1)
         exit = tpExitsCopy[j]
         util.editConnectionValue(matrix, entry[1], exit[1], [0])
-        del(tpExitsCopy[j])
+        del (tpExitsCopy[j])
 
         teleporterEntities += [getTpEntity(entry[0], exit[0])]
 
-    if options.requireAllOrbs:
-        setAllOrbsEndTp(teleporterEntities)
+    return teleporterEntities
+
+
+def getTeleporters(matrix, labels, options):
+    if options.tpMode == TpShuffleMode.SHUFFLE_EXITS:
+        teleporterEntities = shuffleTpExits(matrix, labels)
+    else:
+        teleporterEntities = [x for x in DEFAULT_TELEPORTERS.values()]
+
+    setEndTp(teleporterEntities, options.requireAllOrbs)
+
+    return teleporterEntities
+
+
+def generateRandomSeed(options):
+    if not isinstance(options, RandomizerOptions):
+        print(f"options needs to be RandomizerOptions but was {type(options)}, using default options instead")
+        options = RandomizerOptions()
+
+    random.seed(options.seed)
+    matrix, labels = util.readTable("logic/standard.csv")
+
+    teleporterEntities = getTeleporters(matrix, labels, options)
 
     connectionTable, labels = calc.reduceRequirementTable(matrix, labels)
 
-    # connectionTable, labels = util.readTable("logic/reduced_map.csv")
     if options.requireAllOrbs:
         for row in connectionTable:
             row[DEFAULT_END] = [15]

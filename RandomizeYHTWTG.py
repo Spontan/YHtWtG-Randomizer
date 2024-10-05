@@ -52,6 +52,7 @@ def run_randomizer():
     options.difficultyOptions = diffChoiceDict[diffChoice.get()]
     options.shuffleSpawn = op_shuffleSpawn.get()
     options.requireAllOrbs = op_allorbs.get()
+    options.tpMode = logic.TpShuffleMode.SHUFFLE_EXITS if op_shuffleTps.get() else logic.TpShuffleMode.NORMAL
     options.seed = seed
     randomizedMap = logic.generateRandomSeed(options)
 
@@ -246,7 +247,6 @@ def setSettingsString():
     settingsString += getDifficultyString()
     settingsSeedString.set(settingsString)
 
-
 class CustomDifficultyWindow(Toplevel):
 
     def __init__(self, parent, initialSettings=logic.DifficultyOptions(), onclose=None):
@@ -353,14 +353,18 @@ rowCounter = itertools.count()
 op_allorbs = BooleanVar()  # Option to require all orbs - TODO-------------------------------------------------------------
 op_lose = BooleanVar()  # Option to randomize lose orb
 op_shuffleSpawn = BooleanVar()
+op_shuffleTps = BooleanVar()
 op_difficulty = logic.DifficultyOptions()
 check_allorbs = Checkbutton(mainframe, text='Require All Orbs', variable=op_allorbs, command=setSettingsString)
 check_lose = Checkbutton(mainframe, text='Replace Treasure with Lose', variable=op_lose, command=setSettingsString)
 check_shuffleSpawn = Checkbutton(mainframe, text='Shuffle Spawn Location', variable=op_shuffleSpawn,
                                  command=setSettingsString)
+check_shuffleTps = Checkbutton(mainframe, text='Shuffle Teleporters', variable=op_shuffleTps,
+                                 command=setSettingsString)
 check_allorbs.grid(row=next(rowCounter), sticky=W)
 check_lose.grid(row=next(rowCounter), sticky=W)
 check_shuffleSpawn.grid(row=next(rowCounter), sticky=W)
+check_shuffleTps.grid(row=next(rowCounter), sticky=W)
 
 difficultySettings = Frame(mainframe)
 diffChoice = StringVar()
