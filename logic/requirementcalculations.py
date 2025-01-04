@@ -1,3 +1,9 @@
+from threading import Thread
+from timeit import default_timer as timer
+from typing import List
+
+import logic.equivalencegroup as eq
+
 DEFAULT_SPAWN = "You Have to Start the Game Spawn"
 DEFAULT_REDORB = "Crimson Aura Pickup"
 DEFAULT_BLUEORB = "Cerulean Aura Pickup"
@@ -12,17 +18,26 @@ SQUARED_REQUIREMENT_POWERSET_SIZE = REQUIREMENT_POWERSET_SIZE ** 2  #Number of p
 calculateTotalRequirementsDict = {}
 reduceReqsDict = {}
 
-
-def getInitialState(locationList, startLocation = DEFAULT_SPAWN, debug = False):
+def getInitialState(locationList, startLocation, debug = False):
     """
     Creates an initial state for the iterate function
     """
-    startLocationPosition = locationList.index(startLocation)
     if debug:
-        paths = [{} for _ in range(startLocationPosition)] + [{0: -1}] + [{} for _ in range(len(locationList)-startLocationPosition-1)]
+        paths = [{} for _ in range(startLocation)] + [{0: -1}] + [{} for _ in range(len(locationList)-startLocation-1)]
     else:
         paths = None
-    return [[] for _ in range(startLocationPosition)] + [[0]] + [[] for _ in range(len(locationList)-startLocationPosition-1)], paths
+    return [[] for _ in range(startLocation)] + [[0]] + [[] for _ in range(len(locationList)-startLocation-1)], paths
+
+
+def getInitialGroupState(groupCount, startLocation, debug = False):
+    """
+    Creates an initial state for the iterate function
+    """
+    if debug:
+        paths = [{} for _ in range(startLocation)] + [{0: -1}] + [{} for _ in range(groupCount-startLocation-1)]
+    else:
+        paths = None
+    return [[] for _ in range(startLocation)] + [[0]] + [[] for _ in range(groupCount-startLocation-1)], paths
 
 def findPoIs(locations):
     """
@@ -36,7 +51,7 @@ def findPoIs(locations):
 
     return pois
 
-def reduceRequirementTable(matrix, labels, reducedLocations = None, pathsMatrix = None, printProgress = True):
+def reduceRequirementTable(matrix, labels, reducedLocations = None, pathsMatrix = None, printProgress = True, groupingDegree = 1, useParallelProcessing = True):
     """
     Calculates requirements to reach any location on the map from any other location and returns the entries for
     the given set of locations. Can be used to precalculate the connections between all pickup locations + other
@@ -47,31 +62,91 @@ def reduceRequirementTable(matrix, labels, reducedLocations = None, pathsMatrix 
     :param pathsMatrix: Debug option, providing an empty matrix enables debug mode. After returning, the matrix contains
                 all paths the algorithm found.
     """
-    nonEmptyMatrixEntries = calculateNonEmptyMatrixEntries(matrix)
     if reducedLocations == None:
         reducedLocations = []
         for label in labels:
             if label.startswith("\"Pickup:") or label.startswith("\"Spawn:"):
                 reducedLocations += [label]
 
-    reducedTable = [[] for _ in range(len(reducedLocations))]
+    reducedTable = [[[] for _ in range(len(reducedLocations))] for _ in range(len(reducedLocations))]
     reducedIndex = findSubIndex(labels, reducedLocations)
+    start = timer()
+    if groupingDegree > 0:
+        if groupingDegree > 1:
+            preprocessedMatrix = [row for row in matrix]
+            nonEmptyMatrixEntries = calculateNonEmptyMatrixEntries(matrix)
+            for _ in range(1, groupingDegree):
+                for i in range(len(preprocessedMatrix)):
+                    preprocessedMatrix[i] = iterate(matrix, preprocessedMatrix[i], nonEmptyMatrixEntries, None, None)[0]
+            matrix = preprocessedMatrix
+
+        equivalenceGrouping = eq.EquivalenceGroup(matrix)
+        reducedGroups = []
+        indexToGroupMapping = []
+        for i in range(len(reducedIndex)):
+            newGroup = equivalenceGrouping.groupMembership[reducedIndex[i]]
+            try:
+                indexToGroupMapping += [reducedGroups.index(newGroup)]
+            except ValueError:
+                indexToGroupMapping += [len(reducedGroups)]
+                reducedGroups += [newGroup]
+        processMatrix = equivalenceGrouping.groupMatrix
+        startPositions = reducedGroups
+        print(f'#groups: {len(equivalenceGrouping.groups)}, #start positions: {len(startPositions)}')
+    else:
+        processMatrix = matrix
+        startPositions = reducedIndex
 
     debugMode = pathsMatrix != None
+    nonEmptyMatrixEntries = calculateNonEmptyMatrixEntries(processMatrix)
+    outputTable = [[] for _ in range(len(startPositions))]
+    end = timer()
+
+    print(f'preprocessing took {end - start}s')
     if printProgress:
-        print(f'(0/{len(reducedLocations)})')
-    for i in range(len(reducedLocations)):
-        startLocation = reducedLocations[i]
-        initialState, paths = getInitialState(labels, startLocation, debugMode)
-        finalState = findFinalState(matrix, initialState, nonEmptyMatrixEntries, paths)
-        reducedTable[i] = [finalState[x] for x in reducedIndex]
-        if printProgress:
-            print(f'({i+1}/{len(reducedLocations)})')
-        if debugMode:
-            pathsMatrix.append(paths)
+        print(f'(0/{len()})')
+    if useParallelProcessing:
+        threadList: List[WorkerThread] = []
+        for i in range(len(startPositions)):
+            initialState = processMatrix[startPositions[i]]
+            thread = WorkerThread(processMatrix, initialState, nonEmptyMatrixEntries, None)
+            thread.start()
+            threadList += [thread]
+        for i in range(len(startPositions)):
+            threadList[i].join()
+            outputTable[i] = [threadList[i].finalState[x] for x in startPositions]
+            if printProgress:
+                print(f'({i+1}/{len(startPositions)})')
+            if debugMode:
+                pathsMatrix.append(None)
+    else:
+        for i in range(len(startPositions)):
+            initialState = processMatrix[startPositions[i]]
+            finalState = findFinalState(processMatrix, initialState, nonEmptyMatrixEntries, None)
+            outputTable[i] = [finalState[x] for x in startPositions]
+            if printProgress:
+                print(f'({i+1}/{len(startPositions)})')
+            if debugMode:
+                pathsMatrix.append(None)
+
+    if groupingDegree > 0:
+        for i in range(len(reducedIndex)):
+            for j in range(len(reducedIndex)):
+                reducedTable[i][j] = outputTable[indexToGroupMapping[i]][indexToGroupMapping[j]]
+    else:
+        reducedTable = outputTable
 
     return reducedTable, reducedLocations
 
+class WorkerThread(Thread):
+    def __init__(self, matrix, initialState, nonEmptyMatrixEntries, paths):
+        super().__init__()
+        self.matrix = matrix
+        self.initialState = initialState
+        self.nonEmptyMatrixEntries = nonEmptyMatrixEntries
+        self.paths = paths
+    def run(self) -> None:
+        self.finalState = findFinalState(self.matrix, self.initialState, self.nonEmptyMatrixEntries, self.paths)
 
 def findFinalState(matrix, initialState, nonEmptyMatrixEntries, paths = None):
     """

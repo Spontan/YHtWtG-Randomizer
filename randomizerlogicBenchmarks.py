@@ -40,7 +40,63 @@ class MyTestCase(unittest.TestCase):
         print("Testing with " + map)
         start = timer()
         for i in range(iterations):
-            calc.reduceRequirementTable(matrix, labels, None, None, False)
+            calc.reduceRequirementTable(matrix, labels, None, None, False, 0, False)
+        end = timer()
+        print("Total run time (" + str(iterations) + " iterations): " + str(end-start) + "s")
+        print("Time per execution: " + str((end-start)/iterations) + "s")
+
+    def test_mapFileReduction_standard_grouped(self):
+        iterations = 5
+        if iterations <= 0:
+            return
+        map = "logic/standard.csv"
+        matrix, labels = util.readTable(map)
+        print("Testing with " + map)
+        start = timer()
+        for i in range(iterations):
+            calc.reduceRequirementTable(matrix, labels, None, None, False, 1, False)
+        end = timer()
+        print("Total run time (" + str(iterations) + " iterations): " + str(end-start) + "s")
+        print("Time per execution: " + str((end-start)/iterations) + "s")
+
+    def test_mapFileReduction_standard_grouped2(self):
+        iterations = 5
+        if iterations <= 0:
+            return
+        map = "logic/standard.csv"
+        matrix, labels = util.readTable(map)
+        print("Testing with " + map)
+        start = timer()
+        for i in range(iterations):
+            calc.reduceRequirementTable(matrix, labels, None, None, False, 2, False)
+        end = timer()
+        print("Total run time (" + str(iterations) + " iterations): " + str(end-start) + "s")
+        print("Time per execution: " + str((end-start)/iterations) + "s")
+
+    def test_mapFileReduction_standard_parallel(self):
+        iterations = 5
+        if iterations <= 0:
+            return
+        map = "logic/standard.csv"
+        matrix, labels = util.readTable(map)
+        print("Testing with " + map)
+        start = timer()
+        for i in range(iterations):
+            calc.reduceRequirementTable(matrix, labels, None, None, False, 0, True)
+        end = timer()
+        print("Total run time (" + str(iterations) + " iterations): " + str(end-start) + "s")
+        print("Time per execution: " + str((end-start)/iterations) + "s")
+
+    def test_mapFileReduction_standard_grouped_parallel(self):
+        iterations = 5
+        if iterations <= 0:
+            return
+        map = "logic/standard.csv"
+        matrix, labels = util.readTable(map)
+        print("Testing with " + map)
+        start = timer()
+        for i in range(iterations):
+            calc.reduceRequirementTable(matrix, labels, None, None, False, 1, True)
         end = timer()
         print("Total run time (" + str(iterations) + " iterations): " + str(end-start) + "s")
         print("Time per execution: " + str((end-start)/iterations) + "s")
